@@ -19,6 +19,7 @@ def leastSquares(X, Y):
     # TODO: YOUR CODE HERE
     # closed form solution by matrix-vector representations only
 
+    w =  np.linalg.inv(X.T @ X) @ X.T @ Y
     return w
 
 
@@ -26,10 +27,10 @@ def model(X, w):
     # X: M x (d+1)
     # w: d+1
     # return y_hat: M x 1
-
     # TODO: YOUR CODE HERE
-
+    y_hat = X @ w
     return y_hat
+
 
 
 def generate_data(M, var1, var2, degree):
@@ -46,6 +47,7 @@ def generate_data(M, var1, var2, degree):
            [0,  var2]]
 
     data = np.random.multivariate_normal(mu, Cov, M)
+    # print(data)
     # shape: M x 2
 
     plt.figure()
