@@ -45,15 +45,24 @@ def train(X_train, y_train, X_val, y_val):
 
             # TODO: Your code here
             # Mini-batch gradient descent
-
+            w = w - alpha * X_batch.T @ (X_batch @ w - y_batch)
+        
         # TODO: Your code here
         # monitor model behavior after each epoch
         # 1. Compute the training loss by averaging loss_this_epoch
-        # 2. Perform validation on the validation set by the risk
-        # 3. Keep track of the best validation epoch, risk, and the weights
+        losses_train.append(loss_this_epoch/int(np.ceil(N_train/batch_size)))
 
+        # 2. Perform validation on the validation set by the risk
+        _ , _ , risk = predict(X_val,w,y_val)
+
+
+        # 3. Keep track of the best validation epoch, risk, and the weights
+        if risk <= risk_best:
+            risk_best = risk
+            epoch_best = epoch
+            w_best = w
     # Return some variables as needed
-    return None
+    return w_best
 
 
 ############################
@@ -107,8 +116,11 @@ decay = 0.0          # weight decay
 
 
 # TODO: Your code here
-_ = train(X_train, y_train, X_val, y_val)
+w = train(X_train, y_train, X_val, y_val)
 
 # Perform test by the weights yielding the best validation performance
+
+print(predict(X_test,w,y_test)[2])
+
 
 # Report numbers and draw plots as required.
