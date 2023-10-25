@@ -69,7 +69,7 @@ def train(X_train, y_train, X_val, y_val):
 # Main code starts here
 ############################
 # Load data
-with open('housing.pkl', "rb") as f:
+with open("housing.pkl", "rb") as f:
     (X, y) = pickle.load(f)
 
 # X: sample x dimension
