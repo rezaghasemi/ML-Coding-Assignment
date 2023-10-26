@@ -2,7 +2,7 @@
 
 import pickle as pickle
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 def predict(X, w, y=None):
     # X_new: Nsample x (d+1)
@@ -11,8 +11,8 @@ def predict(X, w, y=None):
 
     # TODO: Your code here
     y_hat = X @ w
-    loss = np.linalg.norm(y_hat-y)
-    risk = loss / (X.shape[0])
+    loss = np.linalg.norm(y_hat-y)/(2*X.shape[0])
+    risk = np.linalg.norm(y_hat-y, ord=1)/(X.shape[0])
 
     return y_hat, loss, risk
 
@@ -35,6 +35,7 @@ def train(X_train, y_train, X_val, y_val):
     for epoch in range(MaxIter):
 
         loss_this_epoch = 0
+        
         for b in range(int(np.ceil(N_train/batch_size))):
 
             X_batch = X_train[b*batch_size: (b+1)*batch_size]
@@ -54,6 +55,7 @@ def train(X_train, y_train, X_val, y_val):
 
         # 2. Perform validation on the validation set by the risk
         _ , _ , risk = predict(X_val,w,y_val)
+        risks_val.append(risk)
 
 
         # 3. Keep track of the best validation epoch, risk, and the weights
@@ -62,7 +64,7 @@ def train(X_train, y_train, X_val, y_val):
             epoch_best = epoch
             w_best = w
     # Return some variables as needed
-    return w_best
+    return w_best, epoch_best, risk_best, losses_train, risks_val
 
 
 ############################
@@ -116,11 +118,17 @@ decay = 0.0          # weight decay
 
 
 # TODO: Your code here
-w = train(X_train, y_train, X_val, y_val)
+results = train(X_train, y_train, X_val, y_val)
 
 # Perform test by the weights yielding the best validation performance
+# w_best, epoch_best, risk_best, losses_train
+print(f"the best weight i {results[0]} and happens at eppoch number {results[1]} and has {results[2]} risk")
 
-print(predict(X_test,w,y_test)[2])
 
 
 # Report numbers and draw plots as required.
+
+# w_best, epoch_best, risk_best, losses_train, risks_val
+# plt.plot(range(len(results[3])), results[3], 'r--', range(len(results[4])), results[4], 'b--')
+plt.plot(range(len(results[3])), results[3], 'r--')
+plt.show()
