@@ -54,7 +54,7 @@ def train(X_train, y_train, X_val, y_val):
         losses_train.append(loss_this_epoch/int(np.ceil(N_train/batch_size)))
 
         # 2. Perform validation on the validation set by the risk
-        _ , _ , risk = predict(X_val,w,y_val)
+        risk = predict(X_val,w,y_val)[2]
         risks_val.append(risk)
 
 
@@ -129,6 +129,6 @@ print(f"the best weight i {results[0]} and happens at eppoch number {results[1]}
 # Report numbers and draw plots as required.
 
 # w_best, epoch_best, risk_best, losses_train, risks_val
-# plt.plot(range(len(results[3])), results[3], 'r--', range(len(results[4])), results[4], 'b--')
-plt.plot(range(len(results[3])), results[3], 'r--')
+plt.plot(range(len(results[3])), results[3], 'r--', range(len(results[4])), results[4], 'b--')
+# plt.plot(range(len(results[3])), results[3], 'r--')
 plt.show()
