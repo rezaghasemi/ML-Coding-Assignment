@@ -11,15 +11,20 @@ def predict(X, w, y=None):
 
     # TODO: Your code here
     y_hat = X @ w
-    loss = np.linalg.norm(y_hat-y)**2
-    risk = np.linalg.norm(y_hat-y, ord=1)
+    loss = np.linalg.norm(y_hat-y)**2/(2*X.shape[0])
+    risk = np.linalg.norm(y_hat-y, ord=1)/(X.shape[0])
 
     return y_hat, loss, risk
 
 
-def train(X_train, y_train, X_val, y_val):
+def transform(X):
+    return np.concatenate((X,X**2),axis=1)
+
+
+def train(X_train, y_train, X_val, y_val,gammaDecay = 3):
     N_train = X_train.shape[0]
     N_val = X_val.shape[0]
+
 
     # initialization
     w = np.zeros([X_train.shape[1], 1])
@@ -46,7 +51,7 @@ def train(X_train, y_train, X_val, y_val):
 
             # TODO: Your code here
             # Mini-batch gradient descent
-            w = w - alpha * X_batch.T @ (X_batch @ w - y_batch)
+            w = w - alpha * (X_batch.T @ (X_batch @ w - y_batch)+gammaDecay*w)
         
         # TODO: Your code here
         # monitor model behavior after each epoch
@@ -79,6 +84,8 @@ with open("housing.pkl", "rb") as f:
 
 X = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
 
+X = transform(X)
+
 
 # Augment feature
 X_ = np.concatenate((np.ones([X.shape[0], 1]), X), axis=1)
@@ -102,6 +109,10 @@ np.random.shuffle(y)
 X_train = X_[:300]
 y_train = y[:300]
 
+
+
+
+
 X_val = X_[300:400]
 y_val = y[300:400]
 
@@ -117,12 +128,12 @@ MaxIter = 100        # Maximum iteration
 decay = 0.0          # weight decay
 
 
-# TODO: Your code here
-results = train(X_train, y_train, X_val, y_val)
 
-# Perform test by the weights yielding the best validation performance
-# w_best, epoch_best, risk_best, losses_train
-# print(f"the best weight i {results[0]} and happens at eppoch number {results[1]} and has {results[2]} risk")
+# for gammaDecay in [3, 1, 0.3, 0.1, 0.03, 0.01]:
+#     print("Gamma Decay: ", gammaDecay)
+#     print(train(X_train, y_train, X_val, y_val,gammaDecay=gammaDecay)[2])
+
+results = train(X_train, y_train, X_val, y_val,gammaDecay=0.1)
 
 print(f"Epoch at which we get the maximum: {results[1]}")
 
