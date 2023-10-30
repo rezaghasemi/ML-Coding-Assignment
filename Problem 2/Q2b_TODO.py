@@ -11,20 +11,21 @@ def predict(X, w, y=None):
 
     # TODO: Your code here
     y_hat = X @ w
-    loss = np.linalg.norm(y_hat-y)**2/(2*X.shape[0])
-    risk = np.linalg.norm(y_hat-y, ord=1)/(X.shape[0])
+    loss = np.linalg.norm(y_hat-y)**2
+    risk = np.linalg.norm(y_hat-y, ord=1)/y_hat.shape[0]
 
     return y_hat, loss, risk
+
 
 
 def transform(X):
     return np.concatenate((X,X**2),axis=1)
 
 
-def train(X_train, y_train, X_val, y_val,gammaDecay = 3):
+
+def train(X_train, y_train, X_val, y_val,gammaDecay = 0):
     N_train = X_train.shape[0]
     N_val = X_val.shape[0]
-
 
     # initialization
     w = np.zeros([X_train.shape[1], 1])
@@ -51,12 +52,12 @@ def train(X_train, y_train, X_val, y_val,gammaDecay = 3):
 
             # TODO: Your code here
             # Mini-batch gradient descent
-            w = w - alpha * (X_batch.T @ (X_batch @ w - y_batch)+gammaDecay*w)
+            w = w - alpha *1/batch_size *(X_batch.T @ (X_batch @ w - y_batch)+gammaDecay*w)
         
         # TODO: Your code here
         # monitor model behavior after each epoch
         # 1. Compute the training loss by averaging loss_this_epoch
-        losses_train.append(loss_this_epoch/int(np.ceil(N_train/batch_size)))
+        losses_train.append(loss_this_epoch/int(np.ceil(N_train)))
 
         # 2. Perform validation on the validation set by the risk
         risk = predict(X_val,w,y_val)[2]
@@ -70,6 +71,7 @@ def train(X_train, y_train, X_val, y_val,gammaDecay = 3):
             w_best = w
     # Return some variables as needed
     return w_best, epoch_best, risk_best, losses_train, risks_val
+
 
 
 ############################

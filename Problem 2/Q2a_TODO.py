@@ -134,10 +134,14 @@ print(f"test performance (risk) in that epoch {results[3][results[1]]}")
 
 # w_best, epoch_best, risk_best, losses_train, risks_val
 plt.plot(range(len(results[3])), results[3], 'r--')
-
+plt.ylabel('Train Loss')
+plt.xlabel('Epoch')
 # plt.plot(range(len(results[3])), results[3], 'r--')
 plt.show()
 
 plt.plot(range(len(results[4])), results[4], 'b--')
+
+plt.ylabel('Risk')
+plt.xlabel('Epoch')
 
 plt.show()
