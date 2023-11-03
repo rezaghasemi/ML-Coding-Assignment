@@ -17,13 +17,7 @@ def predict(X, w, y=None):
     return y_hat, loss, risk
 
 
-
-def transform(X):
-    return np.concatenate((X,X**2),axis=1)
-
-
-
-def train(X_train, y_train, X_val, y_val,gammaDecay = 0):
+def train(X_train, y_train, X_val, y_val):
     N_train = X_train.shape[0]
     N_val = X_val.shape[0]
 
@@ -52,7 +46,7 @@ def train(X_train, y_train, X_val, y_val,gammaDecay = 0):
 
             # TODO: Your code here
             # Mini-batch gradient descent
-            w = w - alpha *1/batch_size *(X_batch.T @ (y_hat_batch - y_batch)+gammaDecay*w)
+            w = w - alpha * 1/batch_size * X_batch.T @ (y_hat_batch - y_batch)
         
         # TODO: Your code here
         # monitor model behavior after each epoch
@@ -60,18 +54,17 @@ def train(X_train, y_train, X_val, y_val,gammaDecay = 0):
         losses_train.append(loss_this_epoch/(2*N_train))
 
         # 2. Perform validation on the validation set by the risk
-        risk = predict(X_val,w,y_val)[2]
+        risk = predict(X_val,w,y_val)[-1]
         risks_val.append(risk)
 
 
         # 3. Keep track of the best validation epoch, risk, and the weights
-        if risk <= risk_best:
+        if risk < risk_best:
             risk_best = risk
             epoch_best = epoch
             w_best = w
     # Return some variables as needed
     return w_best, epoch_best, risk_best, losses_train, risks_val
-
 
 
 ############################
@@ -85,8 +78,6 @@ with open("housing.pkl", "rb") as f:
 # y: sample x 1
 
 X = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
-
-X = transform(X)
 
 
 # Augment feature
@@ -111,10 +102,6 @@ np.random.shuffle(y)
 X_train = X_[:300]
 y_train = y[:300]
 
-
-
-
-
 X_val = X_[300:400]
 y_val = y[300:400]
 
@@ -127,16 +114,15 @@ y_test = y[400:]
 alpha = 0.001      # learning rate
 batch_size = 10    # batch size
 MaxIter = 100        # Maximum iteration
-decay = 0.01          # weight decay
+decay = 0.0          # weight decay
 
 
-
-# for gammaDecay in [3, 1, 0.3, 0.1, 0.03, 0.01]:
-#     print("Gamma Decay: ", gammaDecay)
-#     print(train(X_train, y_train, X_val, y_val,gammaDecay=gammaDecay)[2])
-
+# TODO: Your code here
 w_best, epoch_best, risk_best, losses_train, risks_val = train(X_train, y_train, X_val, y_val)
 risk_test = predict(X_test, w_best, y_test)[-1]
+# Perform test by the weights yielding the best validation performance
+# w_best, epoch_best, risk_best, losses_train
+# print(f"the best weight i {results[0]} and happens at eppoch number {results[1]} and has {results[2]} risk")
 
 print(f"Epoch at which we get the maximum: {epoch_best}")
 
@@ -145,6 +131,8 @@ print(f"validation performance in that epoch is {risk_best}")
 print(f"test performance (risk) in that epoch {risk_test}")
 
 # Report numbers and draw plots as required.
+
+# w_best, epoch_best, risk_best, losses_train, risks_val
 plt.plot(range(MaxIter), losses_train, 'r--')
 plt.ylabel('Train Loss')
 plt.xlabel('Epoch')

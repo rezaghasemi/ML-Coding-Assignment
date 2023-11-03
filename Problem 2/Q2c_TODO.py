@@ -19,7 +19,7 @@ def predict(X, w, y=None):
 
 
 def transform(X):
-    return np.concatenate((X,X**2),axis=1)
+    return np.concatenate((X,X**2,X**3),axis=1)
 
 
 
@@ -52,12 +52,12 @@ def train(X_train, y_train, X_val, y_val,gammaDecay = 0):
 
             # TODO: Your code here
             # Mini-batch gradient descent
-            w = w - alpha *1/batch_size *(X_batch.T @ (y_hat_batch - y_batch)+gammaDecay*w)
+            w = w - alpha *1/batch_size *(X_batch.T @ (X_batch @ w - y_batch)+gammaDecay*w)
         
         # TODO: Your code here
         # monitor model behavior after each epoch
         # 1. Compute the training loss by averaging loss_this_epoch
-        losses_train.append(loss_this_epoch/(2*N_train))
+        losses_train.append(loss_this_epoch/int(np.ceil(N_train)))
 
         # 2. Perform validation on the validation set by the risk
         risk = predict(X_val,w,y_val)[2]
@@ -124,10 +124,10 @@ y_test = y[400:]
 #####################
 # setting
 
-alpha = 0.001      # learning rate
+alpha = 0.00001      # learning rate
 batch_size = 10    # batch size
 MaxIter = 100        # Maximum iteration
-decay = 0.01          # weight decay
+decay = 0.0          # weight decay
 
 
 
@@ -135,25 +135,22 @@ decay = 0.01          # weight decay
 #     print("Gamma Decay: ", gammaDecay)
 #     print(train(X_train, y_train, X_val, y_val,gammaDecay=gammaDecay)[2])
 
-w_best, epoch_best, risk_best, losses_train, risks_val = train(X_train, y_train, X_val, y_val)
-risk_test = predict(X_test, w_best, y_test)[-1]
+results = train(X_train, y_train, X_val, y_val,gammaDecay=0.1)
 
-print(f"Epoch at which we get the maximum: {epoch_best}")
+print(f"Epoch at which we get the maximum: {results[1]}")
 
-print(f"validation performance in that epoch is {risk_best}")
+print(f"validation performance in that epoch is {results[2]}")
 
-print(f"test performance (risk) in that epoch {risk_test}")
+print(f"test performance (risk) in that epoch {results[3][results[1]]}")
 
 # Report numbers and draw plots as required.
-plt.plot(range(MaxIter), losses_train, 'r--')
-plt.ylabel('Train Loss')
-plt.xlabel('Epoch')
+
+# w_best, epoch_best, risk_best, losses_train, risks_val
+plt.plot(range(len(results[3])), results[3], 'r--')
+
 # plt.plot(range(len(results[3])), results[3], 'r--')
 plt.show()
 
-plt.plot(range(MaxIter), risks_val, 'b--')
-
-plt.ylabel('Risk')
-plt.xlabel('Epoch')
+plt.plot(range(len(results[4])), results[4], 'b--')
 
 plt.show()
