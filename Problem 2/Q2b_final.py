@@ -4,14 +4,14 @@ import pickle as pickle
 import numpy as np
 import matplotlib.pyplot as plt
 
-def predict(X, w, y=None):
+def predict(X, w, y=None, decay = 0):
     # X_new: Nsample x (d+1)
     # w: (d+1) x 1
     # y_new: Nsample
 
     # TODO: Your code here
     y_hat = X @ w
-    loss = np.linalg.norm(y_hat-y)**2
+    loss = np.linalg.norm(y_hat-y)**2 + decay * np.linalg.norm(w)**2
     risk = np.linalg.norm(y_hat-y, ord=1)/y_hat.shape[0]
 
     return y_hat, loss, risk
@@ -23,7 +23,7 @@ def transform(X):
 
 
 
-def train(X_train, y_train, X_val, y_val,gammaDecay = 0):
+def train(X_train, y_train, X_val, y_val,decay = 0):
     N_train = X_train.shape[0]
     N_val = X_val.shape[0]
 
@@ -52,7 +52,7 @@ def train(X_train, y_train, X_val, y_val,gammaDecay = 0):
 
             # TODO: Your code here
             # Mini-batch gradient descent
-            w = w - alpha *1/batch_size *(X_batch.T @ (y_hat_batch - y_batch)+gammaDecay*w)
+            w = w - alpha *1/batch_size *(X_batch.T @ (y_hat_batch - y_batch)+decay*w)
         
         # TODO: Your code here
         # monitor model behavior after each epoch
@@ -60,7 +60,7 @@ def train(X_train, y_train, X_val, y_val,gammaDecay = 0):
         losses_train.append(loss_this_epoch/(2*N_train))
 
         # 2. Perform validation on the validation set by the risk
-        risk = predict(X_val,w,y_val)[2]
+        risk = predict(X_val,w,y_val,decay)[2]
         risks_val.append(risk)
 
 
@@ -83,10 +83,10 @@ with open("housing.pkl", "rb") as f:
 
 # X: sample x dimension
 # y: sample x 1
-
+X = transform(X)
 X = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
 
-X = transform(X)
+
 
 
 # Augment feature
@@ -135,8 +135,8 @@ decay = 0.01          # weight decay
 #     print("Gamma Decay: ", gammaDecay)
 #     print(train(X_train, y_train, X_val, y_val,gammaDecay=gammaDecay)[2])
 
-w_best, epoch_best, risk_best, losses_train, risks_val = train(X_train, y_train, X_val, y_val)
-risk_test = predict(X_test, w_best, y_test)[-1]
+w_best, epoch_best, risk_best, losses_train, risks_val = train(X_train, y_train, X_val, y_val,decay=decay)
+risk_test = predict(X_test, w_best, y_test,decay=decay)[-1]
 
 print(f"Epoch at which we get the maximum: {epoch_best}")
 
