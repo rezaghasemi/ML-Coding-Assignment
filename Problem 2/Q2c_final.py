@@ -1,23 +1,29 @@
+#!/usr/bin/env python3
+
 import pickle as pickle
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-def predict(X, w, y=None):
+def predict(X, w, y=None, decay = 0):
     # X_new: Nsample x (d+1)
     # w: (d+1) x 1
     # y_new: Nsample
 
     # TODO: Your code here
-    y_hat = np.dot(X,w)
-    loss = np.dot((y - y_hat).T,(y - y_hat)) + decay*np.dot(w.T,w)
-    M_val = y_hat.shape[0]
-    risk = 1/M_val*np.sum(np.abs(y_hat - y))
+    y_hat = X @ w
+    loss = np.linalg.norm(y_hat-y)**2 + decay * np.linalg.norm(w)**2
+    risk = np.linalg.norm(y_hat-y, ord=1)/y_hat.shape[0]
 
     return y_hat, loss, risk
 
 
-def train(X_train, y_train, X_val, y_val):
+
+def transform(X):
+    return np.concatenate((X,X**2,X**3),axis=1)
+
+
+
+def train(X_train, y_train, X_val, y_val,decay = 0):
     N_train = X_train.shape[0]
     N_val = X_val.shape[0]
 
@@ -35,6 +41,7 @@ def train(X_train, y_train, X_val, y_val):
     for epoch in range(MaxIter):
 
         loss_this_epoch = 0
+        
         for b in range(int(np.ceil(N_train/batch_size))):
 
             X_batch = X_train[b*batch_size: (b+1)*batch_size]
@@ -45,23 +52,26 @@ def train(X_train, y_train, X_val, y_val):
 
             # TODO: Your code here
             # Mini-batch gradient descent
-            Gradient_batch = 1/batch_size*np.dot(X_batch.T, y_hat_batch - y_batch) + decay*w
-            w += - alpha*Gradient_batch
+            w = w - alpha *1/batch_size *(X_batch.T @ (y_hat_batch - y_batch)+decay*w)
+        
         # TODO: Your code here
         # monitor model behavior after each epoch
         # 1. Compute the training loss by averaging loss_this_epoch
+        losses_train.append(loss_this_epoch/(2*N_train))
+
         # 2. Perform validation on the validation set by the risk
+        risk = predict(X_val,w,y_val,decay)[2]
+        risks_val.append(risk)
+
+
         # 3. Keep track of the best validation epoch, risk, and the weights
-        training_loss = 1/(2*N_train)*loss_this_epoch
-        _ , _ , risk_val = predict(X_val, w, y_val)
-        losses_train = np.append(losses_train, training_loss)
-        risks_val = np.append(risks_val, risk_val)
-        if risk_val < risk_best:
-          risk_best = risk_val
-          epoch_best = epoch
-          w_best = w
+        if risk <= risk_best:
+            risk_best = risk
+            epoch_best = epoch
+            w_best = w
     # Return some variables as needed
-    return epoch_best, risk_best, w_best, losses_train, risks_val
+    return w_best, epoch_best, risk_best, losses_train, risks_val
+
 
 
 ############################
@@ -70,13 +80,14 @@ def train(X_train, y_train, X_val, y_val):
 # Load data
 with open("housing.pkl", "rb") as f:
     (X, y) = pickle.load(f)
-X = np.concatenate((X,X**2), axis=1)
 
 # X: sample x dimension
 # y: sample x 1
-
+X = transform(X)
 X = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
-print('shape_X',X.shape)
+
+
+
 
 # Augment feature
 X_ = np.concatenate((np.ones([X.shape[0], 1]), X), axis=1)
@@ -100,6 +111,10 @@ np.random.shuffle(y)
 X_train = X_[:300]
 y_train = y[:300]
 
+
+
+
+
 X_val = X_[300:400]
 y_val = y[300:400]
 
@@ -115,28 +130,30 @@ MaxIter = 100        # Maximum iteration
 decay = 0.01          # weight decay
 
 
-# TODO: Your code here
-epoch_best, risk_best, w_best, losses_train, risks_val = train(X_train, y_train, X_val, y_val)
-# Perform test by the weights yielding the best validation performance
-_ , _ , risk_test = predict(X_test, w_best, y_test)
+
+# for gammaDecay in [3, 1, 0.3, 0.1, 0.03, 0.01]:
+#     print("Gamma Decay: ", gammaDecay)
+#     print(train(X_train, y_train, X_val, y_val,gammaDecay=gammaDecay)[2])
+
+w_best, epoch_best, risk_best, losses_train, risks_val = train(X_train, y_train, X_val, y_val,decay=decay)
+risk_test = predict(X_test, w_best, y_test,decay=decay)[-1]
+
+print(f"Epoch at which we get the maximum: {epoch_best}")
+
+print(f"validation performance in that epoch is {risk_best}")
+
+print(f"test performance (risk) in that epoch {risk_test}")
+
 # Report numbers and draw plots as required.
-print('Epoch_best=', epoch_best, '\nRisk_best_validation = ', risk_best, '\nRisk_test= ', risk_test)
-
-iterations = list(range(1, MaxIter + 1))
-plt.plot(iterations, losses_train, color="blue", label='Training Loss')
-plt.title('Training Loss Over Epochs')
+plt.plot(range(MaxIter), losses_train, 'r--')
+plt.ylabel('Train Loss')
 plt.xlabel('Epoch')
-plt.ylabel('Training Loss')
-plt.legend()
-plt.grid(True)
+# plt.plot(range(len(results[3])), results[3], 'r--')
 plt.show()
-plt.savefig('Training_Loss_#2_b' + '.jpg')
 
-plt.plot(iterations, risks_val, color="red", label='Validation Risk')
-plt.title('Validation Risk Over Epochs')
+plt.plot(range(MaxIter), risks_val, 'b--')
+
+plt.ylabel('Risk')
 plt.xlabel('Epoch')
-plt.ylabel('Validation Risk')
-plt.legend()
-plt.grid(True)
+
 plt.show()
-plt.savefig('Validation_Risk_#2_b' + '.jpg')
